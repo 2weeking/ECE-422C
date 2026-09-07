@@ -24,14 +24,12 @@ public class Problem2 {
                     value += c - 'a' + 1;
                 } else if (c >= 'A' && c <= 'Z') {
                     value += c - 'A' + 1;
-                } else {
-                    // Treat punctuation as ending the word.
-                    break;
                 }
+                //punctuations should not end word
             }
 
             if (value == 100) {
-                result.append(word.toLowerCase()).append(System.lineSeparator());
+                result.append(word).append(System.lineSeparator()); //remove lowercase
             }
         }
 
