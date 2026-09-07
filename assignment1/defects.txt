@@ -4,14 +4,14 @@
 Problem 1:
 ----------------------------------------
 Defect 1: only exact-n strings are considered (not at most n)
-Requirements: The specification requires the greatest product using AT MOST n adjacent digits, because a shorter window
+Requirement: The specification requires the greatest product using AT MOST n adjacent digits, because a shorter window
 can be greater than a larger window with a 0.
 Starter Code: The inner j-loop always multiples exactly n times starting at each position i (for (int j=0; j<n; j++)),
 so windows that are shorter than n are never looked at.
 Exposed: "09" with n=2 and "909" with n=3 as both returned 0 when expected was 9.
 
 Defect 2: any input shorter than n isn't ran
-Requirements: When the string is smaller than n digits, the program still must return the best available product obtainable.
+Requirement: When the string is smaller than n digits, the program still must return the best available product obtainable.
 Starter Code: The outer i-loop bound (i <= s.length() - n) will never execute when s.length() < n as the bound will be negative.
 Exposed: "9" with n=3 and "91" with n=5 as both returned 0 when expected was 9.
 
@@ -19,4 +19,16 @@ Exposed: "9" with n=3 and "91" with n=5 as both returned 0 when expected was 9.
 ----------------------------------------
 Problem 2:
 ----------------------------------------
-Defect 1:
+Defect 1: non-alphabetic characters incorrectly end word
+Requirement: Non-alphabetic characters have a value of 0 and shouldn't affect what is a word or what isn't, 
+the rest of the word is still looked at as seen in the given example in Problem2Tester.
+Starter Code: Encountering any other character outside "a-z" or "A-Z", the inner loop would 'break', 
+not looking at the rest of the word.
+Exposed: the given example with "wizard's", "jjjjjjjjj,j", and "jjjjjjjjj3j" all of these words broke cuz of the 
+non-alphabetic character between the actual letters.
+
+Defect 2: not keeping the original output with different casing of letters (output is automatically lowercased)
+Requirement: Each matching word must be printed exactly as it appeared in the input.
+Starter Code: 'result.append(word.toLowerCase())' converts any matched results to lowercase before it is appended. 
+This removes uppercase letters that would otherwise be in the matched word.
+Exposed: "JJJJJJjjjj" and "jjjjjjjjjj JJJJJJJJJJ" both returned only lowercase j's instead of keeping the exact original.
