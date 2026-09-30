@@ -15,9 +15,8 @@ package assignment2.core;
  * game: HISTORY (show past guesses) and, when running in test mode,
  * REVEAL (show the secret).
  *
- * A future guessing game reuses this class completely unchanged by
- * supplying its own GameConfiguration, GuessValidator, and
- * GuessEvaluator implementations.
+ * Wordle reuses this round loop with a dictionary validator, its own
+ * evaluator and a game-specific word label for outcome messages.
  */
 public class GuessingGameEngine {
     // Everything this engine needs is handed in through the
@@ -29,6 +28,7 @@ public class GuessingGameEngine {
     private final SecretGenerator secretGenerator;
     private final UserInterface ui;
     private final boolean testMode;
+    private final String secretName;
 
     // Tracks every valid guess made so far this round, for the HISTORY command.
     private final GuessHistory history = new GuessHistory();
@@ -39,12 +39,23 @@ public class GuessingGameEngine {
                                SecretGenerator secretGenerator,
                                UserInterface ui,
                                boolean testMode) {
+        this(config, validator, evaluator, secretGenerator, ui, testMode, "code");
+    }
+
+    public GuessingGameEngine(GameConfiguration config,
+                               GuessValidator validator,
+                               GuessEvaluator evaluator,
+                               SecretGenerator secretGenerator,
+                               UserInterface ui,
+                               boolean testMode,
+                               String secretName) {
         this.config = config;
         this.validator = validator;
         this.evaluator = evaluator;
         this.secretGenerator = secretGenerator;
         this.ui = ui;
         this.testMode = testMode;
+        this.secretName = secretName;
     }
 
     /**
@@ -53,6 +64,8 @@ public class GuessingGameEngine {
      * Returns true if the player won.
      */
     public boolean playOneGame() {
+        // An engine can also be reused for another round by a caller.
+        history.clear();
         // Ask the injected generator for this round's secret -- the
         // engine doesn't care whether it's random or fixed.
         Code secret = secretGenerator.generate(config);
@@ -60,8 +73,7 @@ public class GuessingGameEngine {
         // In test mode, show the secret immediately so a tester
         // doesn't have to guess blind while debugging.
         if (testMode) {
-            ui.display("[TEST MODE] Secret code is: " + secret);
-            ui.display("");
+            ui.display("[TEST MODE] Secret " + secretName + " is: " + secret);
         }
 
         int attemptsUsed = 0;
@@ -72,6 +84,10 @@ public class GuessingGameEngine {
             String prompt = "Attempt " + (attemptsUsed + 1) + "/" + config.getMaxAttempts()
                     + " - enter your guess: ";
             String raw = ui.promptInput(prompt);
+            if (raw == null) {
+                ui.display("Input ended.");
+                return false;
+            }
             // Normalize once so command-checking below isn't case-sensitive.
             String command = raw == null ? "" : raw.trim().toUpperCase();
 
@@ -80,13 +96,11 @@ public class GuessingGameEngine {
             // touching attemptsUsed.
             if (command.equals("HISTORY")) {
                 showHistory();
-                ui.display("");
                 continue;
             }
             // "REVEAL" only works in test mode, and likewise doesn't cost an attempt.
             if (testMode && command.equals("REVEAL")) {
-                ui.display("[TEST MODE] Secret code is: " + secret);
-                ui.display("");
+                ui.display("[TEST MODE] Secret " + secretName + " is: " + secret);
                 continue;
             }
 
@@ -96,7 +110,6 @@ public class GuessingGameEngine {
                 // Bad input (wrong length, illegal symbol, etc.): tell
                 // the player why and loop back WITHOUT consuming an attempt.
                 ui.display("Invalid guess: " + result.getErrorMessage());
-                ui.display("");
                 continue;
             }
 
@@ -109,10 +122,6 @@ public class GuessingGameEngine {
 
             ui.display("Feedback: " + feedback.toDisplayString());
 
-            // Blank line for readability: visually separates this guess's
-            // feedback from the next "Attempt N/M" prompt below it.
-            ui.display("");
-
             if (feedback.isWinningFeedback()) {
                 won = true;
             }
@@ -120,13 +129,11 @@ public class GuessingGameEngine {
 
         // Loop has ended either because the player won or ran out of attempts.
         if (won) {
-            ui.display("You won! The code was " + secret + ". Attempts used: " + attemptsUsed
+            ui.display("You won! The " + secretName + " was " + secret + ". Attempts used: " + attemptsUsed
                     + "/" + config.getMaxAttempts() + ".");
-            ui.display("");
         } else {
             // Reveal the secret on a loss so the player can see what they missed.
-            ui.display("You lost. Out of guesses. The secret code was " + secret + ".");
-            ui.display("");
+            ui.display("You lost. Out of guesses. The secret " + secretName + " was " + secret + ".");
         }
         return won;
     }

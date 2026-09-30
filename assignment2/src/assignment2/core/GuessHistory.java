@@ -29,4 +29,8 @@ public class GuessHistory {
     public boolean isEmpty() {
         return records.isEmpty();
     }
+
+    public void clear() {
+        records.clear();
+    }
 }

@@ -22,10 +22,10 @@ public class ConsoleUserInterface implements UserInterface {
         // typed answer appears right after it on the same line.
         System.out.print(prompt);
 
-        // Defensive check: if input has run out entirely (e.g. piped
-        // input ended), return an empty string instead of crashing.
+        // Distinguish exhausted input from a blank line, so a scripted
+        // session cannot loop forever after standard input closes.
         if (!scanner.hasNextLine()) {
-            return "";
+            return null;
         }
         return scanner.nextLine();
     }
